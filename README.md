@@ -8,6 +8,7 @@
 
 - Player can now place their own phone props where they want
 - Updated client.lua to not run function every frame
+- Fixed taxi not going to the waypoint if it was already set before player got into the vehicle
 
 # Preview
 
