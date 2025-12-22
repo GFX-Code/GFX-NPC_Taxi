@@ -52,7 +52,7 @@ CreateThread(function()
     local uiShown = false
 
     while true do
-        Wait(1000) -- checks every 1000ms instead of every frame, thank you Randolio
+        Wait(5000) -- checks every 5000ms instead of every frame, thank you Randolio
 
         local playerPed = PlayerPedId()
         local shouldShow = taxiInstance
