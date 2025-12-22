@@ -72,6 +72,53 @@ CreateThread(function()
     end
 end)
 
+CreateThread(function()
+    local lastWaypoint = nil
+
+    while true do
+        Wait(500)
+
+        if not taxiInstance
+            or not taxiInstance.vehicle
+            or not DoesEntityExist(taxiInstance.vehicle)
+            or not taxiInstance.driver
+            or not DoesEntityExist(taxiInstance.driver)
+        then
+            lastWaypoint = nil
+            Wait(1000)
+        else
+            local playerPed = PlayerPedId()
+            if not IsPedInVehicle(playerPed, taxiInstance.vehicle, false) then
+                lastWaypoint = nil
+            else
+                local waypoint = GetFirstBlipInfoId(8)
+                if waypoint ~= 0 then
+                    local coords = GetBlipCoords(waypoint)
+                    if not lastWaypoint
+                        or #(vector3(coords.x, coords.y, coords.z) - vector3(lastWaypoint.x, lastWaypoint.y, lastWaypoint.z)) > 5.0
+                    then
+                        lastWaypoint = coords
+
+                        TaskVehicleDriveToCoord(
+                            taxiInstance.driver,
+                            taxiInstance.vehicle,
+                            coords.x,
+                            coords.y,
+                            coords.z,
+                            20.0,
+                            0,
+                            GetEntityModel(taxiInstance.vehicle),
+                            786603,
+                            1.0,
+                            true
+                        )
+                    end
+                end
+            end
+        end
+    end
+end)
+
 local spawnedPayphones = {} 
 
 CreateThread(function()
