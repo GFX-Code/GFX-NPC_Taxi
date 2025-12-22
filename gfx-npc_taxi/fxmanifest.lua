@@ -1,4 +1,5 @@
 fx_version 'cerulean'
+game 'gta5'
 lua54 'yes'
 author 'Grafix'
 version '1.0.0'
