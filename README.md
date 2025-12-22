@@ -7,7 +7,7 @@
 # Update
 
 - Player can now place their own phone props where they want
-- Updated client.lua to not run fucnction every frame
+- Updated client.lua to not run function every frame
 
 # Preview
 
