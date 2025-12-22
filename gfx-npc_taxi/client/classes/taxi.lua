@@ -19,7 +19,7 @@ end
 
 function taxi:RequestTaxi(playerCoords)
     if self.state ~= "idle" then
-        lib.notify({type = 'error', description = 'Taxi already requested'})
+        lib.notify({type = 'error', description = 'A taxi has already been requested'})
         return false
     end
 
@@ -98,7 +98,7 @@ function taxi:FindSpawnPositionAndSpawn()
     if found and spawnCoords then
         self:SpawnTaxi(spawnCoords)
     else
-        lib.notify({type = 'error', description = 'Could not find a suitable route for the taxi'})
+        lib.notify({type = 'error', description = 'The driver could not find a suitable route to get to you'})
         self.state = "idle"
     end
 end
@@ -146,7 +146,7 @@ function taxi:SpawnTaxi(spawnCoords)
 
     lib.notify({
         type = 'success',
-        description = 'Taxi with plate number '..self.plate..' is on its way! Please wait for arrival',
+        description = 'Taxi with the license plate '..self.plate..' is on its way! Please wait for it to arrive.',
         duration = 5000
     })
 
@@ -288,14 +288,14 @@ function taxi:OnArrival()
     SetVehicleEngineOn(self.vehicle, true, true, false)
 
     if self.state == "arrived" then
-        lib.notify({type='success', description='Taxi has arrived! Approach the car', duration=7000})
+        lib.notify({type='success', description='Your taxi has arrived! Approach the car and get in the back seat', duration=7000})
         StartVehicleHorn(self.vehicle, 500, 0, true)
         self:StartWaitingTimer()
     elseif self.state == "trip_complete" then
         SetVehicleDoorsLocked(self.vehicle, 1)
         playTaxiSpeech(self.driver, "TAXID_ARRIVE_AT_DEST", "SPEECH_PARAMS_FORCE_NORMAL")
         Wait(1500)
-        lib.notify({type='success', description='Trip completed', duration=7000})
+        lib.notify({type='success', description='Journey complete, thank you for riding with us', duration=7000})
         TaskLeaveVehicle(PlayerPedId(), self.vehicle, 1)
         Wait(1500)
         self:Pay()
@@ -375,7 +375,7 @@ function taxi:StartWaitingTimer()
         end
 
         if GetGameTimer() - startTime > waitTime * 1000 then
-            lib.notify({type = 'info', description = 'The taxi left due to a long wait'})
+            lib.notify({type = 'info', description = 'The taxi left due to waiting too long'})
             self:Cleanup()
             return
         end
@@ -385,7 +385,7 @@ function taxi:StartWaitingTimer()
             StartVehicleHorn(self.vehicle, 1000, 0, true)
             lib.notify({
                 type = 'info',
-                description = 'Taxi is waiting for you! Time left: ' .. remaining .. ' sec',
+                description = 'The taxi is waiting for you! Time left: ' .. remaining .. ' sec',
                 duration = 5000
             })
         end
@@ -431,7 +431,7 @@ function taxi:StartTrip()
         self:DriveTo(tx, ty, tz)
         self:MonitorTrip()
     else
-        lib.notify({type='error', description='No waypoint set!'})
+        lib.notify({type='error', description='No destination has been set!'})
     end
 end
 
@@ -472,7 +472,7 @@ end
 
 function taxi:Cancel()
     if self.state ~= "idle" then
-        lib.notify({type = 'info', description = 'Taxi call cancelled'})
+        lib.notify({type = 'info', description = 'Taxi ride has been cancelled'})
         self:Pay()
         if IsPedInVehicle(PlayerPedId(), self.vehicle, false) then
             TaskLeaveVehicle(PlayerPedId(), self.vehicle, 1)
