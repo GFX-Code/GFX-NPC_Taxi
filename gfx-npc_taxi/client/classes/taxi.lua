@@ -142,6 +142,16 @@ function taxi:SpawnTaxi(spawnCoords)
 
     self:CreateDriver()
     SetVehicleEngineOn(vehicle, true, true, false)
+
+    SetVehicleDoorsLocked(self.vehicle, 1)
+
+    Citizen.CreateThread(function()
+        while self.vehicle and DoesEntityExist(self.vehicle) do
+            SetVehicleDoorsLocked(self.vehicle, 1)
+            Citizen.Wait(1000)
+        end
+    end)
+
     self:SetupBlip()
 
     lib.notify({
