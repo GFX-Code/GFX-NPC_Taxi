@@ -8,9 +8,9 @@ Config = {
 }
 
 Config.SpeedLimitZones = {
-    [2]  = 40, -- Normal roads (city & regular streets)
-    [64] = 25, -- Off-road (dirt, sand, trails)
-    [66] = 60, -- Highways / freeways
+    [2]  = 40, -- normal roads (city & regular streets)
+    [64] = 25, -- off-road (dirt, sand, trails)
+    [66] = 60, -- highways / freeways
 }
 
 Config.DrivingStyles = {
@@ -26,14 +26,14 @@ Config.DrivingStyles = {
     },
 }
 
-Config.PayphoneModels = {
+Config.PayphoneModels = { -- add more models if needed
     `prop_phonebox_04`,
     `prop_phonebox_03`,
 }
 
-Config.PlacedPayphones = {
-    { coords = vec4(-267.46, -767.04, 32.45, 90.41), prop = `prop_phonebox_04` },
-    { coords = vec4(-266.06, -763.78, 32.52, 70.24), prop = `prop_phonebox_03` },
+Config.PlacedPayphones = { -- example placed payphones, you can add your own
+    { coords = vec4(425.28, -973.17, 30.60, 34.27), prop = `prop_phonebox_04` },
+    { coords = vec4(425.94, -975.41, 30.71, 129.37), prop = `prop_phonebox_03` },
 }
 
 Config.Framework = {}
