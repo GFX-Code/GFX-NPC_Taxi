@@ -27,7 +27,13 @@ Config.DrivingStyles = {
 }
 
 Config.PayphoneModels = { --add more models if needed, i just used the 1 for testing
-    `prop_phonebox_04`
+    `prop_phonebox_04`,
+    `prop_phonebox_03`,
+}
+
+Config.PlacedPayphones = {
+    { coords = vec4(-267.46, -767.04, 32.45, 90.41), prop = `prop_phonebox_04` },
+    { coords = vec4(-266.06, -763.78, 32.52, 70.24), prop = `prop_phonebox_03` },
 }
 
 Config.Framework = {}
