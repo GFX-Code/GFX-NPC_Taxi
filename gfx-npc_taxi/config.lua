@@ -26,7 +26,7 @@ Config.DrivingStyles = {
     },
 }
 
-Config.PayphoneModels = { --add more models if needed, i just used the 1 for testing
+Config.PayphoneModels = {
     `prop_phonebox_04`,
     `prop_phonebox_03`,
 }
