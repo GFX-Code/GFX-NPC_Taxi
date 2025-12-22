@@ -4,6 +4,11 @@
 - Select your location while waiting for the taxi to arrive
 - If the player does not have cash it will charge from the bank
 
+# Update
+
+- Player can now place their own phone props where they want
+- Updated client.lua to not run fucnction every frame
+
 # Preview
 
 https://youtu.be/KB6lZ8NrX8M
