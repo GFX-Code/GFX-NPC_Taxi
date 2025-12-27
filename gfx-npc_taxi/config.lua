@@ -7,6 +7,8 @@ Config = {
     driver_model = "a_m_m_eastsa_02"
 }
 
+Config.TaxiCallFee = 50       -- minimum required to even call taxi
+
 Config.SpeedLimitZones = {
     [2]  = 40, -- normal roads (city & regular streets)
     [64] = 25, -- off-road (dirt, sand, trails)
@@ -21,8 +23,8 @@ Config.DrivingStyles = {
     },
     rush = {
         style = 787263,
-        speedMult = 1.5,
-        aggressiveness = 0.75,
+        speedMult = 2.0,
+        aggressiveness = 1.0,
     },
 }
 
@@ -32,8 +34,7 @@ Config.PayphoneModels = { -- add more models if needed
 }
 
 Config.PlacedPayphones = { -- example placed payphones, you can add your own
-    { coords = vec4(425.28, -973.17, 30.60, 34.27), prop = `prop_phonebox_04` },
-    { coords = vec4(425.94, -975.41, 30.71, 129.37), prop = `prop_phonebox_03` },
+    { coords = vec4(-1896.5, 685.66, 127.46, 46.75), prop = `prop_phonebox_03` },
 }
 
 Config.Framework = {}
