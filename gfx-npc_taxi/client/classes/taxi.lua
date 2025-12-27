@@ -19,15 +19,29 @@ end
 
 function taxi:RequestTaxi(playerCoords)
     if self.state ~= "idle" then
-        lib.notify({type = 'error', description = 'A taxi has already been requested'})
+        lib.notify({ type = 'error', description = 'A taxi has already been requested' })
         return false
     end
 
-    self.state = "spawning"
-    self.playerCoords = playerCoords or GetEntityCoords(PlayerPedId())
-    self.attempts = 0
+    lib.callback('taxi:server:canAffordTaxi', false, function(canAfford)
+        if not canAfford then
+            lib.notify({
+                type = 'error',
+                description = 'You do not have enough money to call a taxi'
+            })
+            return
+        end
 
-    self:FindSpawnPositionAndSpawn()
+        lib.callback('taxi:server:payForTaxi', false, function(paid)
+            if not paid then return end
+
+            self.state = "spawning"
+            self.playerCoords = playerCoords or GetEntityCoords(PlayerPedId())
+            self.attempts = 0
+            self:FindSpawnPositionAndSpawn()
+        end, Config.TaxiCallFee)
+    end)
+
     return true
 end
 
@@ -83,15 +97,26 @@ function taxi:FindSpawnPositionAndSpawn()
     local spawnCoords = nil
     while not found and self.attempts < self.maxAttempts do
         self.attempts = self.attempts + 1
+
         local randomAngle = math.random() * math.pi * 2
-        local randomDistance = math.random(150, 200)
+        local randomDistance = math.random(150, 250)
         local randomOffset = vector3(math.cos(randomAngle) * randomDistance, math.sin(randomAngle) * randomDistance, 0)
         local potentialCoords = self.playerCoords + randomOffset
-        spawnCoords = self:FindNearestRoadNode(potentialCoords, 50.0)
-        if self:IsPathValid(spawnCoords, self.playerCoords) then
-            found = true
-            break
+
+        local roadCoords = self:FindNearestRoadNode(potentialCoords, 50.0)
+
+        if roadCoords then
+            local _, z = GetGroundZFor_3dCoord(roadCoords.x, roadCoords.y, roadCoords.z + 50.0, 0)
+            if z then
+                roadCoords = vector3(roadCoords.x, roadCoords.y, z)
+                if self:IsPathValid(roadCoords, self.playerCoords) then
+                    spawnCoords = roadCoords
+                    found = true
+                    break
+                end
+            end
         end
+
         Citizen.Wait(0)
     end
 
@@ -214,10 +239,10 @@ end
 
 function taxi:DriveTo(x, y, z)
     if not self.driver or not DoesEntityExist(self.driver) then self:Cleanup() return end
-    local target = getStoppingLocation(vec3(x, y, z))
+    local targetCoords = vector3(x, y, z)
     SetVehicleDoorsLocked(self.vehicle, 4)
     self.state = "in_trip"
-    self.price = Config.price_per_landing
+    self.price = Config.price_per_landing or 0
 
     Citizen.CreateThread(function()
         while self.state == "in_trip" do
@@ -227,20 +252,22 @@ function taxi:DriveTo(x, y, z)
     end)
 
     Citizen.CreateThread(function()
+        TaskVehicleDriveToCoordLongrange(self.driver, self.vehicle, targetCoords.x, targetCoords.y, targetCoords.z, self.rushMode and 50.0 or 20.0,
+            self.rushMode and Config.DrivingStyles.rush.style or Config.DrivingStyles.normal.style, 1.0)
+
         while self.state == "in_trip" do
             Citizen.Wait(500)
             if not self:IsValid() then self:Cleanup() return end
 
             local taxiCoords = GetEntityCoords(self.vehicle)
-            local distance = #(taxiCoords - target)
-            local speed = self.rushMode and 50.0 or 20.0
-            local style = self.rushMode and Config.DrivingStyles.rush.style or Config.DrivingStyles.normal.style
+            local distance = #(taxiCoords - targetCoords)
 
-            if distance > 16.0 then
-                TaskVehicleDriveToCoordLongrange(self.driver, self.vehicle, target.x, target.y, target.z, speed, style, 1.0)
-                SetPedKeepTask(self.driver, true)
-            else
+            if distance <= 5.0 then
                 ClearPedTasks(self.driver)
+                SetVehicleForwardSpeed(self.vehicle, 0.0)
+                SetVehicleBrakeLights(self.vehicle, true)
+                SetVehicleDoorsLocked(self.vehicle, 1)
+                
                 self.state = "trip_complete"
                 self:OnArrival()
                 break
@@ -266,10 +293,11 @@ end
 function taxi:MonitorTrip()
     Citizen.CreateThread(function()
         while self.state == "in_trip" do
-            if IsControlJustReleased(0, 177) then
+            if IsControlJustReleased(0, 202) then
                 self:Cancel()
                 break
             end
+
             Draw2DText(string.format("Total cost: $%s", self.price), 0.085, 0.727, 0.27, {255, 255, 0, 255})
             Citizen.Wait(0)
         end
@@ -403,9 +431,12 @@ function taxi:StartWaitingTimer()
 end
 
 function taxi:Pay()
+    if not self.price or self.price <= 0 then
+        return
+    end
 
-    lib.callback("taxi:server:payForTaxi", false, function(data)
-        if not data then
+    lib.callback('taxi:server:payForTaxi', false, function(paid)
+        if not paid then
         end
     end, self.price)
 end
@@ -420,29 +451,45 @@ local function GetWaypointCoords()
 end
 
 function taxi:StartTrip()
-    self.state = "in_trip"
+    lib.callback('taxi:server:canAffordTaxi', false, function(canAfford)
+        if not canAfford then
+            lib.notify({
+                type = 'error',
+                description = 'You do not have enough money to start this trip'
+            })
+            self:Cancel()
+            return
+        end
 
-    playTaxiSpeech(self.driver, "TAXID_BEGIN_JOURNEY", "SPEECH_PARAMS_FORCE_NORMAL")
-    lib.notify({
-        type = 'inform',
-        description = 'To start the trip, tell the driver where to go',
-        duration = 5000
-    })
-
-    local waypoint = GetWaypointCoords()
-    if waypoint then
-        local tx, ty, tz = waypoint.x, waypoint.y, waypoint.z
         self.state = "in_trip"
+
+        playTaxiSpeech(self.driver, "TAXID_BEGIN_JOURNEY", "SPEECH_PARAMS_FORCE_NORMAL")
+
         lib.notify({
-            type = 'success',
-            description = 'Trip started! Press Backspace to cancel',
-            duration = 5000
+            type = 'inform',
+            description = 'Set a destination to start the trip',
+            duration = 6000
         })
-        self:DriveTo(tx, ty, tz)
-        self:MonitorTrip()
-    else
-        lib.notify({type='error', description='No destination has been set!'})
-    end
+
+        Citizen.CreateThread(function()
+            while self.state == "in_trip" do
+                Citizen.Wait(500)
+
+                local waypoint = GetWaypointCoords()
+                if waypoint then
+                    lib.notify({
+                        type = 'success',
+                        description = 'Destination set! Press Backspace to cancel',
+                        duration = 5000
+                    })
+
+                    self:DriveTo(waypoint.x, waypoint.y, waypoint.z)
+                    self:MonitorTrip()
+                    break
+                end
+            end
+        end)
+    end)
 end
 
 function taxi:HandleStuck()
