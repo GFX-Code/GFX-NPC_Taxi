@@ -10,6 +10,11 @@
 - Updated client.lua to not run function every frame
 - Fixed taxi not going to the waypoint if it was already set before player got into the vehicle
 
+# Update 1.0.2
+
+- Added checks to make sure players have money to call taxi
+- Adjusted taxi driving style when pulling up to destination
+
 # Preview
 
 https://youtu.be/KB6lZ8NrX8M
